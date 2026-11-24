@@ -7,13 +7,13 @@ import {
     validateRequired,
     validationEmail,
 } from './utils/util.js';
+import { iniciarBotoesDeVerSenha } from './utils/password-toggle.js';
 
 const DOM = {
     form:       document.querySelector('form'),
     nome:       document.getElementById('nome'),
     email:      document.getElementById('email'),
     senha:      document.getElementById('senha'),
-    toggleBtn:  document.querySelector('.toggle-password[data-target="senha"]'),
     listaSenha: document.getElementById('senhaRequisitos'),
 };
 
@@ -21,19 +21,7 @@ const DOM = {
 // TOGGLE VISIBILIDADE DA SENHA
 // ===========================================
 
-DOM.toggleBtn?.addEventListener('click', function () {
-    const input = DOM.senha;
-    if (!input) return;
-
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-
-    const icon = this.querySelector('i');
-    if (icon) {
-        icon.classList.toggle('fa-eye',      !isPassword);
-        icon.classList.toggle('fa-eye-slash', isPassword);
-    }
-});
+iniciarBotoesDeVerSenha();
 
 // ===========================================
 // REQUISITOS DE SENHA (gerado pelo util.js)

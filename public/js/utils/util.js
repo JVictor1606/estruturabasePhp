@@ -4,12 +4,12 @@ export function sanitizeInput(value) {
 }
 
 export function showFieldError(campo, mensagem) {
-  campo.classList.add("invalid", "border-rose-500", "focus:ring-rose-100");
+  campo.classList.add("invalid", "border-danger", "focus:ring-danger-soft");
 
   let errorEl = campo.parentElement.querySelector(".field-error");
   if (!errorEl) {
     errorEl = document.createElement("span");
-    errorEl.className = "field-error mt-2 block text-sm font-medium text-rose-600";
+    errorEl.className = "field-error mt-2 block text-sm font-medium text-danger";
     campo.parentElement.appendChild(errorEl);
   }
   errorEl.textContent = mensagem;
@@ -17,7 +17,7 @@ export function showFieldError(campo, mensagem) {
 }
 
 export function hideFieldError(campo) {
-  campo.classList.remove("invalid", "border-rose-500", "focus:ring-rose-100");
+  campo.classList.remove("invalid", "border-danger", "focus:ring-danger-soft");
 
   const errorEl = campo.parentElement.querySelector(".field-error");
   if (errorEl) {
@@ -201,10 +201,10 @@ export function construirListadeRequisitosSenha(listaElement) {
     listaElement.innerHTML = '';
     PASSWORD_RULES.forEach(function (rule) {
         const li = document.createElement('li');
-        li.className = 'password-requirements__item flex items-center gap-2 text-sm text-slate-500';
+        li.className = 'password-requirements__item flex items-center gap-2 text-sm text-faint';
 
         const icon = document.createElement('i');
-        icon.className = 'fa-solid fa-xmark text-rose-400';
+        icon.className = 'fa-solid fa-xmark text-danger';
 
         const span = document.createElement('span');
         span.textContent = rule.text;
@@ -224,11 +224,11 @@ export function checarRequisitosSenha(ulElement, senha) {
     items.forEach(function (item, index) {
         const passed = PASSWORD_RULES[index].regex.test(senha);
         item.classList.toggle('valid', passed);
-        item.classList.toggle('text-emerald-600', passed);
-        item.classList.toggle('text-slate-500', !passed);
+        item.classList.toggle('text-success', passed);
+        item.classList.toggle('text-faint', !passed);
         item.querySelector('i').className = passed
-            ? 'fa-solid fa-check text-emerald-600'
-            : 'fa-solid fa-xmark text-rose-400';
+            ? 'fa-solid fa-check text-success'
+            : 'fa-solid fa-xmark text-danger';
 
         if (!passed) allValid = false;
     });
@@ -245,7 +245,7 @@ export function allRequirementsPass(senha) {
 
 
 function showError(campo, errorElement, mensagem) {
-  campo.classList.add("invalid", "border-rose-500", "focus:ring-rose-100");
+  campo.classList.add("invalid", "border-danger", "focus:ring-danger-soft");
   if (errorElement) {
     errorElement.textContent = mensagem;
     errorElement.style.display = "block";
@@ -253,7 +253,7 @@ function showError(campo, errorElement, mensagem) {
 }
 
 function hideError(campo, errorElement) {
-  campo.classList.remove("invalid", "border-rose-500", "focus:ring-rose-100");
+  campo.classList.remove("invalid", "border-danger", "focus:ring-danger-soft");
   if (errorElement) {
     errorElement.textContent = "";
     errorElement.style.display = "none";

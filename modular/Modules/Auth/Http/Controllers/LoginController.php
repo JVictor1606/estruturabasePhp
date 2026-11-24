@@ -1,0 +1,264 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Modular\Modules\Auth\Http\Controllers;
+
+use Exception;
+use Modular\Core\Auth;
+use Modular\Core\RateLimiting;
+use Modular\Modules\Auth\Http\Requests\LoginRequest;
+use Modular\Modules\Auth\Http\Requests\RedefinirSenhaFormRequest;
+use Modular\Modules\Auth\Http\Requests\VerificaCodigoFormRequest;
+use Modular\Modules\Auth\Http\Requests\VerificarEmailFormRequest;
+use Modular\Modules\Auth\Services\IAuthService;
+use Modular\Modules\Auth\Services\IRecuperacaoSenhaService;
+use Modular\Modules\Usuarios\Domain\UsuarioException;
+use Modular\Modules\Usuarios\Services\IUserService;
+use Modular\Shared\Http\Controllers\SharedController;
+use Modular\Shared\Support\Toast;
+use Modular\Shared\Support\Url;
+use Modular\Shared\Support\View;
+
+class LoginController extends SharedController
+{
+    private IAuthService $authService;
+    private IUserService $userService;
+    private IRecuperacaoSenhaService $recuperacaoSenhaService;
+    private RateLimiting $rateLimiting;
+
+    public function __construct(
+        IAuthService $authService,
+        IUserService $userService,
+        IRecuperacaoSenhaService $recuperacaoSenhaService,
+        RateLimiting $rateLimiting
+    ) {
+        $this->authService = $authService;
+        $this->userService = $userService;
+        $this->recuperacaoSenhaService = $recuperacaoSenhaService;
+        $this->rateLimiting = $rateLimiting;
+    }
+
+    public function index(): string
+    {
+        $erro = flash('erro_login') ?? '';
+        $esqueciSenhaUrl = Url::path('/esqueci-senha');
+
+        $content = View::render('Login/index', [
+            'erro' => $erro,
+            'formAction' => Url::path('/'),
+            'esqueciSenha' => $esqueciSenhaUrl,
+        ]);
+
+        return self::getPage('PROJETO - LOGIN', $content, options: [
+            'showSidebar' => false,
+            'bodyClass' => 'login-page',
+        ]);
+    }
+
+    public function autenticar(): void
+    {
+        $validated = (new LoginRequest($_POST))->redirectOnFail();
+
+        $data = $validated->validated();
+        $chaveDeTentativas = RateLimiting::chave('login', $data['email']);
+
+        try {
+            $user = $this->authService->auth($data['email'], $data['senha']);
+
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+
+            Auth::attempt($user);
+            $this->rateLimiting->limpar($chaveDeTentativas);
+
+            if (! $this->authService->checkAdmin()) {
+                Url::redirect('/home');
+            }
+
+            Url::redirect('/admin');
+        } catch (UsuarioException $e) {
+            $this->rateLimiting->registrarFalha($chaveDeTentativas);
+            $_SESSION['erro_login'] = $e->getMessage();
+            $_SESSION['old_input'] = ['email' => $data['email']];
+            Url::redirect('/');
+        } catch (Exception $e) {
+            Toast::error('Ocorreu um erro inesperado. Tente novamente mais tarde.');
+            Url::redirect('/');
+        }
+    }
+
+    public function logout(): void
+    {
+        Auth::logout();
+    }
+
+    private function recusarSeBloqueado(string $chaveDeTentativas): void
+    {
+        $segundos = $this->rateLimiting->segundosRestantes($chaveDeTentativas);
+
+        if ($segundos > 0) {
+            Toast::error(RateLimiting::mensagem($segundos));
+            Url::redirect('/esqueci-senha');
+        }
+    }
+
+    public function esqueciSenha(): string
+    {
+        $toast = Toast::pull();
+
+        $content = View::render('Login/esqueci-senha', [
+            'urlLogin' => Url::path('/'),
+            'formActionVerificar' => Url::path('/esqueci-senha/verificar'),
+        ]);
+
+        return parent::getPage('PROJETO - ESQUECI MINHA SENHA', $content, [
+            'showSidebar' => false,
+            'bodyClass' => 'login-page',
+            'toast' => $toast,
+        ]);
+    }
+
+    public function verificarEmail(): string
+    {
+        $validated = (new VerificarEmailFormRequest($_POST))->redirectOnFail();
+        $data = $validated->validated();
+        $email = $data['email'];
+
+        // Cada pedido conta: impede bombardear a caixa de e-mail de alguém com códigos.
+        $chaveDeTentativas = RateLimiting::chave('recuperacao', $email);
+        $this->recusarSeBloqueado($chaveDeTentativas);
+        $this->rateLimiting->registrarFalha($chaveDeTentativas);
+
+        try {
+            $this->recuperacaoSenhaService->solicitarCodigoRecuperacao($email);
+        } catch (Exception) {
+            Toast::error('Erro ao enviar o código. Tente novamente.');
+            Url::redirect('/esqueci-senha');
+        }
+
+        $toast = Toast::pull();
+
+        $content = View::render('Login/esqueci-senha', [
+            'codigoEnviado' => true,
+            'emailParaCodigo' => $email,
+            'timerExpira' => Auth::getExpiraCodigo(),
+            'urlLogin' => Url::path('/'),
+            'urlEsqueciSenha' => Url::path('/esqueci-senha'),
+            'formActionVerificarCodigo' => Url::path('/esqueci-senha/verificar-codigo'),
+        ]);
+
+        return parent::getPage('PROJETO - VERIFICAR CÓDIGO', $content, [
+            'showSidebar' => false,
+            'bodyClass' => 'login-page',
+            'toast' => $toast,
+        ]);
+    }
+
+    public function verificarCodigo(): string
+    {
+        $validated = (new VerificaCodigoFormRequest($_POST))->redirectOnFail(Url::path('/esqueci-senha'));
+
+        $data = $validated->validated();
+
+        $email = $data['email'];
+        $codigo = $data['codigo'];
+
+        $chaveDeTentativas = RateLimiting::chave('recuperacao', $email);
+        $this->recusarSeBloqueado($chaveDeTentativas);
+
+        if (! $this->recuperacaoSenhaService->verificarCodigo($email, $codigo)) {
+            $this->rateLimiting->registrarFalha($chaveDeTentativas);
+
+            if (Auth::codigoExpirado()) {
+                Toast::error('Sessão expirada. Solicite um novo código.');
+                Url::redirect('/esqueci-senha');
+            }
+
+            Toast::error('Código inválido. Tente novamente.');
+
+            $content = View::render('Login/esqueci-senha', [
+                'codigoEnviado' => true,
+                'emailParaCodigo' => $email,
+                'timerExpira' => Auth::getExpiraCodigo(),
+                'urlLogin' => Url::path('/'),
+                'urlEsqueciSenha' => Url::path('/esqueci-senha'),
+                'formActionVerificarCodigo' => Url::path('/esqueci-senha/verificar-codigo'),
+            ]);
+
+            return parent::getPage('PROJETO - VERIFICAR CÓDIGO', $content, [
+                'showSidebar' => false,
+                'bodyClass' => 'login-page',
+                'toast' => Toast::pull(),
+            ]);
+        }
+
+        $this->rateLimiting->limpar($chaveDeTentativas);
+        $this->recuperacaoSenhaService->limparCodigo();
+        Auth::autorizarRedefinicao($email);
+
+        $toast = Toast::pull();
+
+        $content = View::render('Login/esqueci-senha', [
+            'emailVerificado' => $email,
+            'urlLogin' => Url::path('/'),
+            'formActionNovaSenha' => Url::path('/esqueci-senha/redefinir'),
+        ]);
+
+        return self::getPage('PROJETO - REDEFINIR SENHA', $content, [
+            'showSidebar' => false,
+            'bodyClass' => 'login-page',
+            'toast' => $toast,
+        ]);
+    }
+
+    public function redefinirSenha()
+    {
+        if (! Auth::autorizadoMudarSenha()) {
+            Toast::error('Ação não autorizada. Solicite um novo código.');
+            Url::redirect('/esqueci-senha');
+        }
+
+        $emailAutorizado = Auth::getEmailAutorizado();
+
+        $validated = new RedefinirSenhaFormRequest($_POST);
+
+        if ($validated->fails()) {
+            $content = View::render('Login/esqueci-senha', [
+                'emailVerificado' => $emailAutorizado,
+                'formActionNovaSenha' => Url::path('/esqueci-senha/redefinir'),
+                'urlLogin' => Url::path('/'),
+            ]);
+
+            return parent::getPage('PROJETO - REDEFINIR SENHA', $content, [
+                'showSidebar' => false,
+                'bodyClass' => 'login-page',
+                'toast' => Toast::pull(),
+            ]);
+        }
+
+        $data = $validated->validated();
+        $novaSenha = $data['nova_senha'];
+
+        try {
+            $this->userService->redefinirSenha($emailAutorizado, $novaSenha);
+
+            Auth::limparAutorizacaoRedefinicao();
+
+            Toast::success('Senha redefinida com sucesso!');
+            Url::redirect('/');
+        } catch (UsuarioException $e) {
+            $content = View::render('Login/esqueci-senha', [
+                'emailVerificado' => $emailAutorizado,
+                'formActionNovaSenha' => Url::path('/esqueci-senha/redefinir'),
+                'urlLogin' => Url::path('/'),
+            ]);
+            return parent::getPage('PROJETO - REDEFINIR SENHA', $content, [
+                'showSidebar' => false,
+                'bodyClass' => 'login-page',
+                'toast' => Toast::pull(),
+            ]);
+        }
+    }
+}

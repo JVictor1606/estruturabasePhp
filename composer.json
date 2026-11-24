@@ -3,12 +3,19 @@
   "description": "Framework MVC PHP modular — base para projetos em equipe",
   "autoload": {
     "psr-4": {
-      "Src\\": "src/"
-    },
-    "files": 
-    [
-      "src/Core/Helpers.php"
-    ]
+      "Src\\": "src/",
+      "Modular\\": "modular/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --testsuite unit,integration",
+    "test:unit": "phpunit --testsuite unit",
+    "test:integration": "phpunit --testsuite integration"
   },
   "require": {
     "vlucas/phpdotenv": "^5.6",

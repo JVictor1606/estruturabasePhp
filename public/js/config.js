@@ -6,6 +6,7 @@ import {
     hideFieldError,
     validateConfirmPassword,
 } from './utils/util.js';
+import { iniciarBotoesDeVerSenha } from './utils/password-toggle.js';
 
 const DOM = {
     form:           document.getElementById('form-alterar-senha'),
@@ -13,28 +14,13 @@ const DOM = {
     novaSenha:      document.getElementById('nova_senha'),
     confirmarSenha: document.getElementById('confirmar_senha'),
     listaSenha:     document.getElementById('senhaRequisitos'),
-    toggleBtns:     document.querySelectorAll('.toggle-password'),
 };
 
 // ===========================================
 // TOGGLE VISIBILIDADE DAS SENHAS
 // ===========================================
 
-DOM.toggleBtns.forEach(btn => {
-    btn.addEventListener('click', function () {
-        const input = document.getElementById(this.dataset.target);
-        if (!input) return;
-
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-
-        const icon = this.querySelector('i');
-        if (icon) {
-            icon.classList.toggle('fa-eye',       isPassword);
-            icon.classList.toggle('fa-eye-slash',  !isPassword);
-        }
-    });
-});
+iniciarBotoesDeVerSenha();
 
 // ===========================================
 // REQUISITOS DA NOVA SENHA (tempo real)
