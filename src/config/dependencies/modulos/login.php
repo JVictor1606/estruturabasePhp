@@ -16,6 +16,7 @@ use Src\App\Services\RecuperacaoSenhaService;
 use Src\App\Services\UserService;
 use Src\Core\Container;
 use Src\Core\Database;
+use Src\Core\RateLimiting;
 
 // Repositories
 // Services
@@ -61,5 +62,6 @@ Container::set(LoginController::class, static function () {
         Container::get(IAuthService::class),
         Container::get(IUserService::class),
         Container::get(IRecuperacaoSenhaService::class),
+        Container::get(RateLimiting::class),
     );
 });

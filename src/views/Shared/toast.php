@@ -2,7 +2,7 @@
     <?php $mensagens = is_array($toast['message']) ? $toast['message'] : [$toast['message']]; ?>
     <?php
     $isSuccess = ($toast['type'] ?? '') === 'success';
-    $bg = $isSuccess ? 'bg-emerald-600' : 'bg-rose-600';
+    $bg = $isSuccess ? 'bg-success' : 'bg-danger';
     $icon = $isSuccess ? 'fa-circle-check' : 'fa-circle-xmark';
     ?>
     <div class="fixed right-4 top-4 z-[60] w-[min(28rem,calc(100vw-2rem))]">

@@ -41,6 +41,11 @@ class UsuarioException extends DomainException
         return new self($mensagem, HttpStatus::UNPROCESSABLE_ENTITY->value);
     }
 
+    public static function naoPodeDeletarProprioUsuario(): self
+    {
+        return new self('Você não pode deletar a sua própria conta.', HttpStatus::UNPROCESSABLE_ENTITY->value);
+    }
+
     public static function naoPodeDesativarProprioUsuario(): self
     {
         return new self('Você não pode desativar a sua própria conta.', HttpStatus::UNPROCESSABLE_ENTITY->value);

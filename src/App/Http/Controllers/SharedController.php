@@ -16,7 +16,7 @@ class SharedController
         $activePage = $options['activePage'] ?? '';
         $bodyClass = $options['bodyClass'] ?? '';
 
-        $toastData = $toast ?: ($_SESSION['toast'] ?? '');
+        $toastData = $toast ?: ($options['toast'] ?? '') ?: ($_SESSION['toast'] ?? '');
         unset($_SESSION['toast']);
 
         return View::render(
@@ -45,7 +45,7 @@ class SharedController
 
     private static function getHeader(): string
     {
-        return View::render('Shared/header');
+        return View::render('Shared/header', ['usuario' => $_SESSION['usuario'] ?? '']);
     }
 
     private static function getFooter(): string

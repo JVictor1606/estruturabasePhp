@@ -6,12 +6,12 @@ import {
   hideFieldError,
   validateConfirmPassword,
 } from "./utils/util.js";
+import { iniciarBotoesDeVerSenha } from "./utils/password-toggle.js";
 
 const DOM = {
   form: document.querySelector(".form"),
   novaSenha: document.getElementById("nova_senha"),
   confirmarSenha: document.getElementById("confirmar_senha"),
-  toggleButtons: document.querySelectorAll(".toggle-password"),
   listaSenha: document.getElementById("obrigatoriaSenha"),
   codeInputs: document.querySelectorAll(".code-input"),
   codigoCompleto: document.getElementById("codigoCompleto"),
@@ -25,19 +25,6 @@ const DOM = {
 // ============================================
 // TOGGLE PASSWORD
 // ============================================
-
-function togglePassword(button) {
-  const targetId = button.getAttribute("data-target");
-  const input = document.getElementById(targetId);
-  const icon = button.querySelector("i");
-
-  if (!input || !icon) return;
-
-  const isPassword = input.type === "password";
-  input.type = isPassword ? "text" : "password";
-  icon.classList.toggle("fa-eye", !isPassword);
-  icon.classList.toggle("fa-eye-slash", isPassword);
-}
 
 // ============================================
 // VALIDAÇÃO DO FORM DE NOVA SENHA
@@ -187,8 +174,8 @@ function showCodeError() {
     DOM.codeError.style.display = "flex";
   }
   DOM.codeInputs.forEach(function (input) {
-    input.classList.remove("border-slate-200");
-    input.classList.add("border-rose-500", "text-rose-600", "animate-shake");
+    input.classList.remove("border-line");
+    input.classList.add("border-danger", "text-danger", "animate-shake");
   });
 }
 
@@ -197,8 +184,8 @@ function hideCodeError() {
     DOM.codeError.style.display = "none";
   }
   DOM.codeInputs.forEach(function (input) {
-    input.classList.add("border-slate-200");
-    input.classList.remove("border-rose-500", "text-rose-600", "animate-shake");
+    input.classList.add("border-line");
+    input.classList.remove("border-danger", "text-danger", "animate-shake");
   });
 }
 
@@ -275,11 +262,7 @@ function fecharToast() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  DOM.toggleButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-      togglePassword(this);
-    });
-  });
+  iniciarBotoesDeVerSenha();
 
   if (DOM.novaSenha && DOM.confirmarSenha) {
     construirListadeRequisitosSenha(DOM.listaSenha);

@@ -11,7 +11,7 @@ use Src\App\Models\User;
 interface IUserService
 {
     public function createUser(CriarUserDto $dto): User;
-    public function deleteUser(string $id): void;
+    public function deleteUser(string $id, ?string $usuarioLogadoId = null): void;
     public function updateUser(EditUserDto $dto, ?string $usuarioLogadoId = null): User;
     public function atualizarSenha(string $id, string $novaSenha): User;
     public function trocarSenha(string $id, string $senhaAtual, string $novaSenha): User;

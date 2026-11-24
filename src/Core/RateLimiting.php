@@ -4,108 +4,133 @@ declare(strict_types=1);
 
 namespace Src\Core;
 
-use Src\App\Http\Exceptions\Usuario\UsuarioException;
+use Closure;
+use RuntimeException;
 
+/**
+ * Limita tentativas de ações sensíveis (login, recuperação de senha) com bloqueio progressivo.
+ *
+ * Só FALHAS contam. A partir de LIMITE_FALHAS, cada nova falha bloqueia por mais tempo
+ * (DURACOES), o que desestimula adivinhação sem prender para sempre quem apenas errou a senha.
+ * Durante o bloqueio a tentativa é recusada ANTES de verificar a senha, então acertar a senha
+ * não adianta: senão o bloqueio não limitaria palpites. Sucesso zera o contador.
+ */
 class RateLimiting
 {
-    private static string $rateFile = __DIR__ . '/../../Limiting/appLimiting.txt';
-    private int $maxAttempts = 5;
-    private int $maxAttemptsGlobal = 60;
-    private static int $blockDuration = 60;
+    private const LIMITE_FALHAS = 5;
 
-    public static function getIp(?string $email): string
-    {
-        $ip = $_SERVER['REMOTE_ADDR'];
+    /** Segundos de bloqueio a cada falha acima do limite; depois da última, repete o teto. */
+    private const DURACOES = [60, 300, 900, 1800, 3600];
 
-        if (isset($_SESSION['user_id'])) {
-            return $ip . '#' . $_SESSION['user_id'];
-        }
+    /** Sem nenhuma falha por este tempo (depois do fim do bloqueio), o contador recomeça. */
+    private const JANELA_DE_ESQUECIMENTO = 900;
 
-        return $ip . '#' . $email;
+    private Closure $relogio;
+
+    public function __construct(
+        private readonly string $arquivo = __DIR__ . '/../../Limiting/appLimiting.json',
+        ?callable $relogio = null,
+    ) {
+        $this->relogio = $relogio !== null ? Closure::fromCallable($relogio) : static fn (): int => time();
     }
 
-    public function tentativas(string $key): int
+    /** Chave por escopo + IP + identificador (e-mail em minúsculas, sem espaços). */
+    public static function chave(string $escopo, string $identificador): string
     {
-        $this->limparExpirados();
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
 
-        if (! file_exists(self::$rateFile)) {
-            return 0;
-        }
-
-        $lines = file(self::$rateFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $count = 0;
-
-        foreach ($lines as $line) {
-            if (explode('|', $line)[0] === $key) {
-                $count++;
-            }
-        }
-
-        return $count;
+        return $escopo . '#' . $ip . '#' . strtolower(trim($identificador));
     }
 
-    public function bloquear(string $key, string $page): void
+    public static function mensagem(int $segundos): string
     {
-        $maxAttempts = $page === 'login' ? $this->maxAttempts : $this->maxAttemptsGlobal;
-        $minutos = (int) ceil(self::$blockDuration / 60);
-        $unidade = $minutos === 1 ? 'minuto' : 'minutos';
-        if ($this->tentativas($key) >= $maxAttempts) {
-            throw new UsuarioException("Muitas tentativas. Tente novamente em {$minutos} {$unidade}");
+        if ($segundos < 60) {
+            return "Muitas tentativas. Tente novamente em {$segundos} segundos.";
         }
 
-        self::registerAttempt($key);
+        $minutos = (int) ceil($segundos / 60);
+
+        return 'Muitas tentativas. Tente novamente em ' . $minutos . ($minutos === 1 ? ' minuto.' : ' minutos.');
     }
 
-    public static function limpar(string $key): void
+    public function segundosRestantes(string $chave): int
     {
-        if (! file_exists(self::$rateFile)) {
-            return;
-        }
-
-        $lines = file(self::$rateFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-        $filteredLines = array_filter($lines, static function ($line) use ($key) {
-            return explode('|', $line)[0] !== $key;
+        return $this->comTrava(function (array &$estado) use ($chave): int {
+            return max(0, ($estado[$chave]['ate'] ?? 0) - $this->agora());
         });
-
-        file_put_contents(self::$rateFile, implode(PHP_EOL, $filteredLines) . PHP_EOL);
     }
 
-    private static function registerAttempt(string $key): void
+    public function registrarFalha(string $chave): void
     {
-        $dir = dirname(self::$rateFile);
-        if (! is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
+        $this->comTrava(function (array &$estado) use ($chave): void {
+            $agora = $this->agora();
+            $atual = $estado[$chave] ?? ['falhas' => 0, 'ultima' => 0, 'ate' => 0];
 
-        $line = "{$key}|" . time() . PHP_EOL;
+            $atual['falhas']++;
+            $atual['ultima'] = $agora;
 
-        file_put_contents(self::$rateFile, $line, FILE_APPEND);
+            if ($atual['falhas'] >= self::LIMITE_FALHAS) {
+                $nivel = min($atual['falhas'] - self::LIMITE_FALHAS, count(self::DURACOES) - 1);
+                $atual['ate'] = $agora + self::DURACOES[$nivel];
+            }
+
+            $estado[$chave] = $atual;
+        });
     }
 
-    private static function limparExpirados(): void
+    public function limpar(string $chave): void
     {
-        if (! file_exists(self::$rateFile)) {
-            return;
+        $this->comTrava(function (array &$estado) use ($chave): void {
+            unset($estado[$chave]);
+        });
+    }
+
+    private function agora(): int
+    {
+        return ($this->relogio)();
+    }
+
+    /** Lê, deixa o chamador alterar e grava, tudo sob trava exclusiva (requisições simultâneas). */
+    private function comTrava(callable $operacao): mixed
+    {
+        $pasta = dirname($this->arquivo);
+        if (! is_dir($pasta) && ! mkdir($pasta, 0775, true) && ! is_dir($pasta)) {
+            throw new RuntimeException('Não foi possível criar a pasta do limitador de tentativas.');
         }
 
-        $lines = file(
-            self::$rateFile,
-            FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
-        );
+        $handle = fopen($this->arquivo, 'c+');
+        if ($handle === false) {
+            throw new RuntimeException('Não foi possível abrir o arquivo do limitador de tentativas.');
+        }
 
-        $agora = time();
+        try {
+            flock($handle, LOCK_EX);
 
-        $validas = array_filter(
-            $lines,
-            static fn ($line) => intval(
-                explode('|', $line)[1]
-            ) > $agora - self::$blockDuration
-        );
+            $json = stream_get_contents($handle);
+            $estado = $json !== false && $json !== '' ? json_decode($json, true) : [];
+            $estado = is_array($estado) ? $this->descartarExpirados($estado) : [];
 
-        file_put_contents(
-            self::$rateFile,
-            implode(PHP_EOL, $validas) . PHP_EOL
+            $resultado = $operacao($estado);
+
+            ftruncate($handle, 0);
+            rewind($handle);
+            fwrite($handle, (string) json_encode($estado));
+            fflush($handle);
+
+            return $resultado;
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+    }
+
+    private function descartarExpirados(array $estado): array
+    {
+        $limite = $this->agora() - self::JANELA_DE_ESQUECIMENTO;
+
+        return array_filter(
+            $estado,
+            static fn (array $item): bool => max($item['ultima'] ?? 0, $item['ate'] ?? 0) > $limite
         );
     }
 }

@@ -15,7 +15,7 @@ class ErrorController extends SharedController
             'baseUrl' => Url::path('/'),
         ]);
 
-        return parent::getPage('404 - Pagina nao encontrada', $content, [
+        return parent::getPage('404 - Página não encontrada', $content, [
             'showSidebar' => false,
             'bodyClass' => 'error-404',
         ]);

@@ -1,27 +1,12 @@
 
 
+import { iniciarBotoesDeVerSenha } from './utils/password-toggle.js';
+
 const DOM = {
     form: document.querySelector('form'),
-    senhaInput: document.querySelector('#senha'),
-    btnVerSenha: document.querySelector('#btnVerSenha'),
     btnSubmit: document.querySelector('button[type="submit"]'),
     authError: document.querySelector('#auth-error')
 };
-
-
-function togglePassword() {
-    if (!DOM.senhaInput || !DOM.btnVerSenha) return;
-
-    const icon = DOM.btnVerSenha.querySelector('i');
-    const isPassword = DOM.senhaInput.type === 'password';
-
-    DOM.senhaInput.type = isPassword ? 'text' : 'password';
-
-    if (icon) {
-        icon.classList.toggle('ph-eye', isPassword);
-        icon.classList.toggle('ph-eye-slash', !isPassword);
-    }
-}
 
 function setLoadingState(isLoading) {
     if (!DOM.btnSubmit) return;
@@ -41,9 +26,7 @@ function setLoadingState(isLoading) {
 
 function init() {
     
-    if (DOM.btnVerSenha) {
-        DOM.btnVerSenha.addEventListener('click', togglePassword);
-    }
+    iniciarBotoesDeVerSenha();
 
     
     if (DOM.form) {

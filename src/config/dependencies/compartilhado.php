@@ -6,6 +6,7 @@ use Src\App\Http\Middleware\AdminMiddleware;
 use Src\App\Http\Middleware\AuthMiddleware;
 use Src\App\Http\Middleware\GuestMiddleware;
 use Src\App\Http\Middleware\LoginRateLimitingMiddleware;
+use Src\App\Infrastructure\ArquivoEmailSender;
 use Src\App\Infrastructure\HttpEmailSender;
 use Src\App\Infrastructure\IEmailSender;
 use Src\App\Infrastructure\IRepositories\IAuditoriaRepository;
@@ -37,7 +38,12 @@ Container::set(LoginRateLimitingMiddleware::class, static function () {
     return new LoginRateLimitingMiddleware(Container::get(RateLimiting::class));
 });
 
+// EMAIL_DRIVER=arquivo grava os e-mails em EMAIL_ARQUIVO (dev/testes). Qualquer outro valor envia de verdade.
 Container::set(IEmailSender::class, static function () {
+    if (($_ENV['EMAIL_DRIVER'] ?? 'http') === 'arquivo') {
+        return new ArquivoEmailSender($_ENV['EMAIL_ARQUIVO'] ?? sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'emails-dev.jsonl');
+    }
+
     return new HttpEmailSender();
 });
 

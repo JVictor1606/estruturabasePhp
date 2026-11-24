@@ -32,3 +32,10 @@ desktop.ini
 *.tmp
 *.bak
 Limiting/appLimiting.txt
+
+# Estado de execucao (limitador de tentativas) e logs: nao versionar
+/Limiting/
+
+# Cache do PHPUnit
+/.phpunit.cache/
+/.phpunit.result.cache

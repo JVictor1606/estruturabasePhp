@@ -5,34 +5,37 @@ declare(strict_types=1);
 namespace Src\App\Http\Controllers;
 
 use Exception;
-use Src\App\Http\Exceptions\Usuario\UsuarioException;
+use Src\Core\Auth;
+use Src\Core\RateLimiting;
 use Src\App\Http\Requests\LoginRequest;
 use Src\App\Http\Requests\RedefinirSenhaFormRequest;
 use Src\App\Http\Requests\VerificaCodigoFormRequest;
 use Src\App\Http\Requests\VerificarEmailFormRequest;
 use Src\App\Services\IServices\IAuthService;
 use Src\App\Services\IServices\IRecuperacaoSenhaService;
+use Src\App\Http\Exceptions\Usuario\UsuarioException;
 use Src\App\Services\IServices\IUserService;
 use Src\App\Utils\Toast;
 use Src\App\Utils\Url;
 use Src\App\Utils\View;
-use Src\Core\Auth;
-use Src\Core\RateLimiting;
 
 class LoginController extends SharedController
 {
     private IAuthService $authService;
     private IUserService $userService;
     private IRecuperacaoSenhaService $recuperacaoSenhaService;
+    private RateLimiting $rateLimiting;
 
     public function __construct(
         IAuthService $authService,
         IUserService $userService,
-        IRecuperacaoSenhaService $recuperacaoSenhaService
+        IRecuperacaoSenhaService $recuperacaoSenhaService,
+        RateLimiting $rateLimiting
     ) {
         $this->authService = $authService;
         $this->userService = $userService;
         $this->recuperacaoSenhaService = $recuperacaoSenhaService;
+        $this->rateLimiting = $rateLimiting;
     }
 
     public function index(): string
@@ -57,6 +60,7 @@ class LoginController extends SharedController
         $validated = (new LoginRequest($_POST))->redirectOnFail();
 
         $data = $validated->validated();
+        $chaveDeTentativas = RateLimiting::chave('login', $data['email']);
 
         try {
             $user = $this->authService->auth($data['email'], $data['senha']);
@@ -66,7 +70,7 @@ class LoginController extends SharedController
             }
 
             Auth::attempt($user);
-            RateLimiting::limpar(RateLimiting::getIp($data['email']));
+            $this->rateLimiting->limpar($chaveDeTentativas);
 
             if (! $this->authService->checkAdmin()) {
                 Url::redirect('/home');
@@ -74,7 +78,9 @@ class LoginController extends SharedController
 
             Url::redirect('/admin');
         } catch (UsuarioException $e) {
+            $this->rateLimiting->registrarFalha($chaveDeTentativas);
             $_SESSION['erro_login'] = $e->getMessage();
+            $_SESSION['old_input'] = ['email' => $data['email']];
             Url::redirect('/');
         } catch (Exception $e) {
             Toast::error('Ocorreu um erro inesperado. Tente novamente mais tarde.');
@@ -87,6 +93,16 @@ class LoginController extends SharedController
         Auth::logout();
     }
 
+    private function recusarSeBloqueado(string $chaveDeTentativas): void
+    {
+        $segundos = $this->rateLimiting->segundosRestantes($chaveDeTentativas);
+
+        if ($segundos > 0) {
+            Toast::error(RateLimiting::mensagem($segundos));
+            Url::redirect('/esqueci-senha');
+        }
+    }
+
     public function esqueciSenha(): string
     {
         $toast = Toast::pull();
@@ -94,12 +110,12 @@ class LoginController extends SharedController
         $content = View::render('Login/esqueci-senha', [
             'urlLogin' => Url::path('/'),
             'formActionVerificar' => Url::path('/esqueci-senha/verificar'),
-            'toast' => $toast,
         ]);
 
         return parent::getPage('PROJETO - ESQUECI MINHA SENHA', $content, [
             'showSidebar' => false,
             'bodyClass' => 'login-page',
+            'toast' => $toast,
         ]);
     }
 
@@ -109,11 +125,13 @@ class LoginController extends SharedController
         $data = $validated->validated();
         $email = $data['email'];
 
+        // Cada pedido conta: impede bombardear a caixa de e-mail de alguém com códigos.
+        $chaveDeTentativas = RateLimiting::chave('recuperacao', $email);
+        $this->recusarSeBloqueado($chaveDeTentativas);
+        $this->rateLimiting->registrarFalha($chaveDeTentativas);
+
         try {
             $this->recuperacaoSenhaService->solicitarCodigoRecuperacao($email);
-        } catch (UsuarioException) {
-            Toast::error('Email não encontrado.');
-            Url::redirect('/esqueci-senha');
         } catch (Exception) {
             Toast::error('Erro ao enviar o código. Tente novamente.');
             Url::redirect('/esqueci-senha');
@@ -146,7 +164,12 @@ class LoginController extends SharedController
         $email = $data['email'];
         $codigo = $data['codigo'];
 
+        $chaveDeTentativas = RateLimiting::chave('recuperacao', $email);
+        $this->recusarSeBloqueado($chaveDeTentativas);
+
         if (! $this->recuperacaoSenhaService->verificarCodigo($email, $codigo)) {
+            $this->rateLimiting->registrarFalha($chaveDeTentativas);
+
             if (Auth::codigoExpirado()) {
                 Toast::error('Sessão expirada. Solicite um novo código.');
                 Url::redirect('/esqueci-senha');
@@ -170,6 +193,7 @@ class LoginController extends SharedController
             ]);
         }
 
+        $this->rateLimiting->limpar($chaveDeTentativas);
         $this->recuperacaoSenhaService->limparCodigo();
         Auth::autorizarRedefinicao($email);
 

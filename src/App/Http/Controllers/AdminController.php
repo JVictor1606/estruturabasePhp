@@ -125,7 +125,7 @@ class AdminController extends SharedController
         $userId = (string) ($_POST['user_id'] ?? '');
 
         try {
-            $this->userService->deleteUser($userId);
+            $this->userService->deleteUser($userId, (string) ($_SESSION['user_id'] ?? ''));
             Toast::success('Usuário deletado com sucesso!');
         } catch (UsuarioException $e) {
             Toast::error($e->getMessage());

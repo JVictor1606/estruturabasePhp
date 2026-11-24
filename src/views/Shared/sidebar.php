@@ -13,17 +13,17 @@ $urlConfig    = $urlConfig ?? '';
 $urlLogout    = $urlLogout ?? '';
 
 $linkBase     = 'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors';
-$linkActive   = $linkBase . ' bg-slate-900 text-white hover:bg-slate-800';
-$linkInactive = $linkBase . ' text-slate-700 hover:bg-slate-100 hover:text-slate-900';
+$linkActive   = $linkBase . ' bg-primary text-on-primary hover:bg-primary-hover';
+$linkInactive = $linkBase . ' text-ink-soft hover:bg-surface-muted hover:text-ink';
 ?>
 
-<aside id="appSidebar" class="fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0">
-    <div class="flex h-16 items-center justify-center gap-3 border-b border-slate-200 px-4">
+<aside id="appSidebar" class="fixed inset-y-0 left-0 z-50 w-72 -translate-x-full border-r border-line bg-surface transition-transform duration-200 lg:static lg:translate-x-0">
+    <div class="flex h-16 items-center justify-center gap-3 border-b border-line px-4">
         <a href="<?= htmlspecialchars($urlDashboard) ?>" class="flex items-center gap-3">
-            <span class="text-sm font-bold tracking-wide text-slate-900">Meu Projeto</span>
+            <span class="text-sm font-bold tracking-wide text-ink">Meu Projeto</span>
         </a>
         <button type="button" id="closeSidebar"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface-muted lg:hidden"
             aria-label="Fechar menu">
             <i class="fa-solid fa-xmark"></i>
         </button>

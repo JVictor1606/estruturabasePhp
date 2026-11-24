@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Src\App\Http\Middleware;
 
-use Src\App\Http\Exceptions\Usuario\UsuarioException;
-use Src\App\Utils\Url;
 use Src\Core\RateLimiting;
+use Src\App\Utils\Url;
 
+/**
+ * Recusa o login enquanto o par IP + e-mail estiver bloqueado. Só consulta: quem registra a
+ * falha (ou zera, no sucesso) é o LoginController, que é quem sabe se a senha estava certa.
+ */
 class LoginRateLimitingMiddleware implements IMiddleware
 {
     private RateLimiting $rateLimiting;
@@ -16,13 +19,14 @@ class LoginRateLimitingMiddleware implements IMiddleware
     {
         $this->rateLimiting = $rateLimiting;
     }
+
     public function handle(): void
     {
-        try {
-            $key = RateLimiting::getIp($_POST['email'] ?? null);
-            $this->rateLimiting->bloquear($key, 'login');
-        } catch (UsuarioException $e) {
-            $_SESSION['erro_login'] = $e->getMessage();
+        $chave = RateLimiting::chave('login', (string) ($_POST['email'] ?? ''));
+        $segundos = $this->rateLimiting->segundosRestantes($chave);
+
+        if ($segundos > 0) {
+            $_SESSION['erro_login'] = RateLimiting::mensagem($segundos);
             Url::redirect('/');
         }
     }

@@ -1,26 +1,26 @@
 <div class="flex min-h-screen w-full flex-col-reverse lg:flex-row-reverse">
-    <div class="flex flex-1 flex-col items-center justify-center bg-slate-50 px-4 py-10 sm:px-6">
+    <div class="flex flex-1 flex-col items-center justify-center bg-page px-4 py-10 sm:px-6">
         <div class="w-full max-w-sm">
-            <h1 class="text-2xl font-semibold text-slate-900">Recuperar Senha</h1>
-
             <?php if (!empty($emailVerificado)) : ?>
-                <p class="mt-1 mb-5 text-sm text-slate-600">Crie sua nova senha</p>
-
-                <form method="POST" action="{{formActionNovaSenha}}" class="form space-y-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                <form method="POST" action="{{formActionNovaSenha}}" class="form auth-card">
+                    <div>
+                        <h1 class="auth-title">Recuperar Senha</h1>
+                        <p class="auth-subtitle">Crie sua nova senha</p>
+                    </div>
                     <input type="hidden" name="email" value="<?php echo htmlspecialchars($emailVerificado); ?>">
 
                     <div>
-                        <label class="text-sm font-medium text-slate-700">Email verificado</label>
-                        <div class="mt-1 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+                        <label class="field-label">Email verificado</label>
+                        <div class="mt-1 flex items-center gap-2 rounded-xl border border-success-line bg-success-faint px-3 py-2 text-sm font-medium text-success-strong">
                             <i class="fa-solid fa-circle-check"></i>
                             <?php echo htmlspecialchars($emailVerificado); ?>
                         </div>
                     </div>
 
                     <div>
-                        <label for="nova_senha" class="text-sm font-medium text-slate-700">Nova Senha</label>
-                        <div class="relative mt-1">
-                            <i class="fa-solid fa-lock pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <label for="nova_senha" class="field-label">Nova Senha</label>
+                        <div class="password-field mt-1">
+                            <i class="fa-solid fa-lock pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle"></i>
                             <input
                                 type="password"
                                 id="nova_senha"
@@ -28,22 +28,22 @@
                                 placeholder="Digite a nova senha"
                                 minlength="8"
                                 required
-                                class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100">
-                            <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" data-target="nova_senha">
-                                <i class="fa-solid fa-eye"></i>
+                                class="field-input field-input--lg field-input--icon">
+                            <button type="button" class="toggle-password" data-target="nova_senha" aria-label="Mostrar senha">
+                                <i class="fa-solid fa-eye-slash"></i>
                             </button>
                         </div>
                         <ul class="password-requirements mt-3 flex-col gap-1" id="obrigatoriaSenha" style="display:none;"></ul>
                         <?php $senhaErr = old_error('nova_senha'); ?>
                         <?php if ($senhaErr !== '') { ?>
-                            <span class="mt-2 block text-sm font-medium text-rose-600" id="nova_senha-error"><?php echo htmlspecialchars($senhaErr); ?></span>
+                            <span class="field-error" id="nova_senha-error"><?php echo htmlspecialchars($senhaErr); ?></span>
                         <?php } ?>
                     </div>
 
                     <div>
-                        <label for="confirmar_senha" class="text-sm font-medium text-slate-700">Confirmar Nova Senha</label>
-                        <div class="relative mt-1">
-                            <i class="fa-solid fa-lock pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <label for="confirmar_senha" class="field-label">Confirmar Nova Senha</label>
+                        <div class="password-field mt-1">
+                            <i class="fa-solid fa-lock pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle"></i>
                             <input
                                 type="password"
                                 id="confirmar_senha"
@@ -51,21 +51,21 @@
                                 placeholder="Confirme a nova senha"
                                 minlength="8"
                                 required
-                                class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100">
-                            <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" data-target="confirmar_senha">
-                                <i class="fa-solid fa-eye"></i>
+                                class="field-input field-input--lg field-input--icon">
+                            <button type="button" class="toggle-password" data-target="confirmar_senha" aria-label="Mostrar senha">
+                                <i class="fa-solid fa-eye-slash"></i>
                             </button>
                         </div>
                     </div>
                     <?= csrf() ?>
 
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70">
+                    <button type="submit" class="btn btn-primary btn-lg w-full">
                         <i class="fa-solid fa-save"></i>
                         Salvar Nova Senha
                     </button>
 
                     <div class="flex justify-center">
-                        <a href="{{urlLogin}}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <a href="{{urlLogin}}" class="btn btn-secondary w-full">
                             <i class="fa-solid fa-arrow-left"></i>
                             Voltar ao login
                         </a>
@@ -73,56 +73,58 @@
                 </form>
 
             <?php elseif (!empty($codigoEnviado)) : ?>
-                <p class="mt-1 mb-3 text-sm text-slate-600">Enviamos um código de verificação para</p>
-                <div class="mb-5 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
-                    <i class="fa-solid fa-envelope"></i>
-                    <?php echo htmlspecialchars($emailParaCodigo ?? ''); ?>
-                </div>
-
-                <form method="POST" action="{{formActionVerificarCodigo}}" class="form space-y-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm" id="formCodigo">
+                <form method="POST" action="{{formActionVerificarCodigo}}" class="form auth-card" id="formCodigo">
+                    <div>
+                        <h1 class="auth-title">Recuperar Senha</h1>
+                        <p class="auth-subtitle">Enviamos um código de verificação para</p>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface-muted px-3 py-2 text-sm font-medium text-ink-soft">
+                        <i class="fa-solid fa-envelope"></i>
+                        <?php echo htmlspecialchars($emailParaCodigo ?? ''); ?>
+                    </div>
                     <input type="hidden" name="email" value="<?php echo htmlspecialchars($emailParaCodigo ?? ''); ?>">
                     <input type="hidden" name="codigo" id="codigoCompleto">
 
                     <div>
-                        <label class="text-sm font-medium text-slate-700">Digite o código de 6 dígitos</label>
+                        <label class="field-label">Digite o código de 6 dígitos</label>
                         <div class="mt-2 flex items-center justify-center gap-2">
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="0" inputmode="numeric" data-mask="number" autocomplete="one-time-code" required>
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="1" inputmode="numeric" data-mask="number" required>
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="2" inputmode="numeric" data-mask="number" required>
-                            <span class="text-xl font-light text-slate-300">-</span>
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="3" inputmode="numeric" data-mask="number" required>
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="4" inputmode="numeric" data-mask="number" required>
-                            <input type="text" class="code-input h-14 w-12 rounded-xl border-2 border-slate-200 text-center text-xl font-bold text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100" maxlength="1" data-index="5" inputmode="numeric" data-mask="number" required>
+                            <input type="text" class="code-input" maxlength="1" data-index="0" inputmode="numeric" data-mask="number" autocomplete="one-time-code" required>
+                            <input type="text" class="code-input" maxlength="1" data-index="1" inputmode="numeric" data-mask="number" required>
+                            <input type="text" class="code-input" maxlength="1" data-index="2" inputmode="numeric" data-mask="number" required>
+                            <span class="text-xl font-light text-subtle">-</span>
+                            <input type="text" class="code-input" maxlength="1" data-index="3" inputmode="numeric" data-mask="number" required>
+                            <input type="text" class="code-input" maxlength="1" data-index="4" inputmode="numeric" data-mask="number" required>
+                            <input type="text" class="code-input" maxlength="1" data-index="5" inputmode="numeric" data-mask="number" required>
                         </div>
-                        <p class="mt-3 text-center text-xs text-slate-500">
+                        <p class="mt-3 text-center text-xs text-faint">
                             <i class="fa-solid fa-circle-info mr-1"></i>
                             Verifique sua caixa de entrada e spam
                         </p>
                     </div>
                     <?php $codErr = old_error('codigo'); ?>
                     <?php if ($codErr !== '') { ?>
-                        <span class="mt-2 block text-center text-sm font-medium text-rose-600" id="codigo-error"><?php echo htmlspecialchars($codErr); ?></span>
+                        <span class="mt-2 block text-center text-sm font-medium text-danger" id="codigo-error"><?php echo htmlspecialchars($codErr); ?></span>
                     <?php } ?>
-                    <div class="code-error hidden items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700" id="codeError" style="display: none;">
+                    <div class="code-error hidden items-center justify-center gap-2 rounded-xl border border-danger-line bg-danger-faint px-4 py-2.5 text-sm text-danger-strong" id="codeError" style="display: none;">
                         <i class="fa-solid fa-circle-exclamation"></i>
                         <span>Código inválido. Tente novamente.</span>
                     </div>
 
                     <?= csrf() ?>
-                    <button type="submit" id="btnVerificarCodigo" disabled class="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
+                    <button type="submit" id="btnVerificarCodigo" disabled class="btn btn-primary btn-lg w-full">
                         <i class="fa-solid fa-shield-check"></i>
                         Verificar Código
                     </button>
 
                     <div class="code-resend flex flex-col items-center gap-1 pt-1" data-expira="<?php echo $timerExpira ?? 0; ?>">
-                        <p class="text-sm text-slate-500">Não recebeu o código?</p>
-                        <button type="button" id="btnReenviar" class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent" disabled>
+                        <p class="text-sm text-faint">Não recebeu o código?</p>
+                        <button type="button" id="btnReenviar" class="rounded-lg px-3 py-1.5 text-sm font-semibold text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-subtle disabled:hover:bg-transparent" disabled>
                             Reenviar código <span id="timerReenviar"></span>
                         </button>
                     </div>
 
                     <div class="flex justify-center">
-                        <a href="{{urlEsqueciSenha}}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <a href="{{urlEsqueciSenha}}" class="btn btn-secondary w-full">
                             <i class="fa-solid fa-arrow-left"></i>
                             Voltar
                         </a>
@@ -130,13 +132,15 @@
                 </form>
 
             <?php else : ?>
-                <p class="mt-1 mb-5 text-sm text-slate-600">Digite seu email para redefinir sua senha</p>
-
-                <form method="POST" action="{{formActionVerificar}}" class="form space-y-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                <form method="POST" action="{{formActionVerificar}}" class="form auth-card">
                     <div>
-                        <label for="email" class="text-sm font-medium text-slate-700">Email da conta</label>
+                        <h1 class="auth-title">Recuperar Senha</h1>
+                        <p class="auth-subtitle">Digite seu email para redefinir sua senha</p>
+                    </div>
+                    <div>
+                        <label for="email" class="field-label">Email da conta</label>
                         <div class="relative mt-1">
-                            <i class="fa-solid fa-envelope pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <i class="fa-solid fa-envelope pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle"></i>
                             <input
                                 type="email"
                                 id="email"
@@ -146,22 +150,22 @@
                                 minlength="5"
                                 maxlength="255"
                                 required
-                                class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100">
+                                class="h-11 w-full rounded-xl border border-line bg-surface pl-10 pr-3 text-sm text-ink placeholder:text-subtle focus:border-line-strong focus:outline-none focus:ring-4 focus:ring-focus">
                         </div>
                         <?php $emailErr = old_error('email'); ?>
                         <?php if ($emailErr !== '') { ?>
-                            <span class="mt-2 block text-sm font-medium text-rose-600" id="email-error"><?php echo htmlspecialchars($emailErr); ?></span>
+                            <span class="field-error" id="email-error"><?php echo htmlspecialchars($emailErr); ?></span>
                         <?php } ?>
                     </div>
                     <?= csrf() ?>
 
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70">
+                    <button type="submit" class="btn btn-primary btn-lg w-full">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         Verificar Email
                     </button>
 
                     <div class="flex justify-center">
-                        <a href="{{urlLogin}}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <a href="{{urlLogin}}" class="btn btn-secondary w-full">
                             <i class="fa-solid fa-arrow-left"></i>
                             Voltar ao login
                         </a>
@@ -171,12 +175,12 @@
         </div>
     </div>
 
-    <div class="flex min-h-[220px] flex-1 items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 px-4 py-10 text-center text-white">
+    <div class="flex min-h-[220px] flex-1 items-center justify-center bg-gradient-to-br from-primary to-primary-soft px-4 py-10 text-center text-on-primary">
         <div>
-            <span class="block text-sm tracking-[0.2em] text-slate-300">RECUPERACAO DE</span>
+            <span class="block text-sm tracking-[0.2em] text-on-primary-soft">RECUPERAÇÃO DE</span>
             <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Senha</h2>
             <div class="mx-auto mt-4 h-0.5 w-14 bg-white/40"></div>
-            <p class="mt-4 text-sm text-slate-300">Redefina sua senha de acesso</p>
+            <p class="mt-4 text-sm text-on-primary-soft">Redefina sua senha de acesso</p>
         </div>
     </div>
 </div>

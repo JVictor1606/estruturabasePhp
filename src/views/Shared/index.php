@@ -6,13 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <base href="{{basePath}}/">
     <link rel="icon" href="images/favicon.png" type="image/x-icon">
+    <!-- FONTES: para trocar, edite estes links e também --font-sans / --font-serif em public/css/input.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/app.css">
     <title>{{title}}</title>
 </head>
@@ -22,7 +21,7 @@ $bodyClass = $bodyClass ?? '';
 $isLoginPage = is_string($bodyClass) && str_contains($bodyClass, 'login-page');
 ?>
 
-<body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased {{bodyClass}}">
+<body class="min-h-screen bg-page font-sans text-ink antialiased {{bodyClass}}">
     {{toast}}
     <?php if ($isLoginPage) : ?>
         <?php $classMain = $isLoginPage ? '' : 'min-h-screen px-4 py-8 sm:px-6'; ?>
@@ -32,7 +31,7 @@ $isLoginPage = is_string($bodyClass) && str_contains($bodyClass, 'login-page');
         </main>
     <?php else : ?>
         <div class="flex h-screen overflow-hidden">
-            <div id="sidebarBackdrop" class="fixed inset-0 z-40 hidden bg-slate-900/50 lg:hidden"></div>
+            <div id="sidebarBackdrop" class="fixed inset-0 z-40 hidden bg-primary/50 lg:hidden"></div>
             {{sidebar}}
 
             <div class="flex min-w-0 flex-1 flex-col">
@@ -51,28 +50,28 @@ $isLoginPage = is_string($bodyClass) && str_contains($bodyClass, 'login-page');
         </div>
     <?php endif; ?>
 
-    <div id="modalExcluir" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4" aria-hidden="true">
-        <div class="modal w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-0 shadow-xl">
-            <div class="flex items-start gap-3 border-b border-slate-200 p-5">
-                <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+    <div id="modalExcluir" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center bg-primary/50 p-4" aria-hidden="true">
+        <div class="modal w-full max-w-lg rounded-2xl border border-line bg-surface p-0 shadow-xl">
+            <div class="flex items-start gap-3 border-b border-line p-5">
+                <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-warning-soft text-warning-strong">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <h3 class="text-base font-semibold text-slate-900">Confirmar exclusão</h3>
-                    <p class="mt-1 text-sm text-slate-600">Esta ação não pode ser desfeita.</p>
+                    <h3 class="text-base font-semibold text-ink">Confirmar exclusão</h3>
+                    <p class="mt-1 text-sm text-muted">Esta ação não pode ser desfeita.</p>
                 </div>
             </div>
-            <div class="space-y-2 p-5 text-sm text-slate-700">
-                <p>Tem certeza que deseja excluir <strong id="modalItemNome" class="font-semibold text-slate-900"></strong>?</p>
+            <div class="space-y-2 p-5 text-sm text-ink-soft">
+                <p>Tem certeza que deseja excluir <strong id="modalItemNome" class="font-semibold text-ink"></strong>?</p>
             </div>
-            <div class="flex flex-col-reverse gap-2 border-t border-slate-200 p-5 sm:flex-row sm:justify-end">
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" id="btnCancelarExcluir">
+            <div class="flex flex-col-reverse gap-2 border-t border-line p-5 sm:flex-row sm:justify-end">
+                <button type="button" class="btn btn-secondary" id="btnCancelarExcluir">
                     <i class="fa-solid fa-xmark"></i> Cancelar
                 </button>
                 <form method="POST" id="formModalExcluir" class="w-full sm:w-auto" data-no-client-validation="true">
                     <?= csrf() ?>
                     <input type="hidden" id="modalItemId" name="id">
-                    <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 sm:w-auto">
+                    <button type="submit" class="btn btn-danger w-full sm:w-auto">
                         <i class="fa-solid fa-trash"></i> Excluir
                     </button>
                 </form>

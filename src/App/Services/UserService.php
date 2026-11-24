@@ -38,8 +38,12 @@ class UserService implements IUserService
         return Transaction::run(fn () => $this->repository->createUser($user));
     }
 
-    public function deleteUser(string $id): void
+    public function deleteUser(string $id, ?string $usuarioLogadoId = null): void
     {
+        if ($usuarioLogadoId !== null && $usuarioLogadoId === $id) {
+            throw UsuarioException::naoPodeDeletarProprioUsuario();
+        }
+
         if ($this->repository->getUserById($id) === null) {
             throw UsuarioException::naoEncontrado();
         }

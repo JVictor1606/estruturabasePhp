@@ -1,14 +1,67 @@
+/* source(none): sem detecção automática. O Tailwind só lê as fontes declaradas abaixo; do contrário ele
+   lê até o próprio app.css da build anterior e o resultado deixa de ser reproduzível. */
 @import "tailwindcss";
 
 @source "../../src/views/**/*.php";
 @source "../../public/js/**/*.js";
 
+/* =====================================================================================
+   TEMA — é aqui que se muda a cara do sistema.
+
+   COMO TROCAR AS CORES
+   Edite os valores de --color-* abaixo: aponte para outra cor da paleta do Tailwind
+   (a sintaxe é a mesma das linhas existentes, só com outra cor) ou use um hex.
+   As telas usam só estes nomes por função (bg-primary, text-muted, border-line...),
+   nunca a paleta crua (slate-900, rose-600...).
+
+   COMO TROCAR AS FONTES
+   1) Troque --font-sans / --font-serif abaixo.
+   2) Troque o <link> da fonte em modular/Shared/Views/Shared/index.php (Google Fonts).
+
+   Depois de editar: npm run build   (gera public/css/app.css)
+   ===================================================================================== */
 @theme {
+    /* Fontes: sans = texto e interface; serif = títulos de página */
     --font-sans: Roboto, ui-sans-serif, system-ui, sans-serif;
     --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
 
-    --color-primary: #1e293b;
-    --color-primary-hover: #0f172a;
+    /* Marca: botão principal, item ativo do menu, painéis escuros */
+    --color-primary: var(--color-slate-900);
+    --color-primary-hover: var(--color-slate-800);
+    --color-primary-soft: var(--color-slate-700);
+    --color-on-primary: #ffffff;
+    --color-on-primary-soft: var(--color-slate-300);
+
+    /* Superfícies e linhas */
+    --color-page: var(--color-slate-50);              /* fundo da página */
+    --color-surface: #ffffff;                         /* cards, campos, tabelas */
+    --color-surface-muted: var(--color-slate-100);    /* chips, hover, cabeçalho de tabela */
+    --color-line: var(--color-slate-200);             /* bordas e divisórias */
+    --color-line-strong: var(--color-slate-400);      /* borda do campo em foco */
+    --color-focus: var(--color-slate-100);            /* anel de foco */
+
+    /* Texto, do mais forte ao mais fraco */
+    --color-ink: var(--color-slate-900);              /* títulos e valores */
+    --color-ink-soft: var(--color-slate-700);         /* rótulos */
+    --color-muted: var(--color-slate-600);            /* texto secundário */
+    --color-faint: var(--color-slate-500);            /* legendas */
+    --color-subtle: var(--color-slate-400);           /* placeholder e ícones */
+
+    /* Estados */
+    --color-danger: var(--color-rose-600);
+    --color-danger-strong: var(--color-rose-700);
+    --color-danger-soft: var(--color-rose-100);
+    --color-danger-faint: var(--color-rose-50);
+    --color-danger-line: var(--color-rose-200);
+
+    --color-success: var(--color-emerald-600);
+    --color-success-strong: var(--color-emerald-700);
+    --color-success-soft: var(--color-emerald-100);
+    --color-success-faint: var(--color-emerald-50);
+    --color-success-line: var(--color-emerald-200);
+
+    --color-warning-strong: var(--color-amber-700);
+    --color-warning-soft: var(--color-amber-100);
 
     --animate-shake: shake 0.4s ease;
 }
@@ -17,4 +70,94 @@
     0%, 100% { transform: translateX(0); }
     20%, 60% { transform: translateX(-6px); }
     40%, 80% { transform: translateX(6px); }
+}
+
+/* =====================================================================================
+   COMPONENTES — padrões que se repetem nas telas. Mude aqui e muda em todas.
+   ===================================================================================== */
+@layer components {
+    .page-title {
+        @apply font-serif text-3xl font-medium italic tracking-tight text-ink;
+    }
+
+    .card {
+        @apply rounded-2xl border border-line bg-surface p-5;
+    }
+
+    /* Telas de acesso (login, recuperação de senha): cartão com título e subtítulo dentro */
+    .auth-card {
+        @apply space-y-5 rounded-2xl border border-line bg-surface p-8 shadow-sm;
+    }
+
+    .auth-title {
+        @apply text-2xl font-semibold text-ink;
+    }
+
+    .auth-subtitle {
+        @apply mt-1 text-sm text-muted;
+    }
+
+    /* Número grande dentro de um cartão de estatística */
+    .stat-value {
+        @apply mt-2 text-2xl font-semibold text-ink;
+    }
+
+    .field-label {
+        @apply block text-sm font-medium text-ink-soft;
+    }
+
+    .field-input {
+        @apply h-10 w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-subtle focus:border-line-strong focus:outline-none focus:ring-4 focus:ring-focus;
+    }
+
+    .field-input--lg {
+        @apply h-11;
+    }
+
+    /* Campo com ícone à esquerda (o ícone é um <i> absoluto dentro do mesmo wrapper) */
+    .field-input--icon {
+        @apply pl-10;
+    }
+
+    .field-error {
+        @apply mt-2 block text-sm font-medium text-danger-strong;
+    }
+
+    /* Caixinha de 1 dígito do código de verificação: encolhe para caber em qualquer largura */
+    .code-input {
+        @apply h-14 min-w-0 max-w-12 flex-1 rounded-xl border-2 border-line text-center text-xl font-bold text-ink focus:border-line-strong focus:outline-none focus:ring-4 focus:ring-focus;
+    }
+
+    /* Campo de senha: o wrapper posiciona o olho dentro do campo e reserva espaço para ele */
+    .password-field {
+        @apply relative;
+    }
+
+    .password-field > .field-input {
+        @apply pr-10;
+    }
+
+    .toggle-password {
+        @apply absolute right-3 top-1/2 -translate-y-1/2 text-subtle hover:text-muted;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70;
+    }
+
+    .btn-lg {
+        @apply py-2.5;
+    }
+
+    .btn-primary {
+        @apply bg-primary text-on-primary hover:bg-primary-hover;
+    }
+
+    .btn-secondary {
+        @apply border border-line bg-surface text-ink-soft hover:bg-page;
+    }
+
+    .btn-danger {
+        @apply bg-danger text-white hover:bg-danger-strong;
+    }
 }
