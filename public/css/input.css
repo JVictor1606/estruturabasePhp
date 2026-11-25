@@ -1,6 +1,6 @@
 /* source(none): sem detecção automática. O Tailwind só lê as fontes declaradas abaixo; do contrário ele
    lê até o próprio app.css da build anterior e o resultado deixa de ser reproduzível. */
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
 @source "../../src/views/**/*.php";
 @source "../../public/js/**/*.js";
@@ -16,7 +16,7 @@
 
    COMO TROCAR AS FONTES
    1) Troque --font-sans / --font-serif abaixo.
-   2) Troque o <link> da fonte em modular/Shared/Views/Shared/index.php (Google Fonts).
+   2) Troque o <link> da fonte em src/views/Shared/index.php (Google Fonts).
 
    Depois de editar: npm run build   (gera public/css/app.css)
    ===================================================================================== */
