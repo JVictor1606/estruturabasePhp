@@ -18,7 +18,8 @@
   "scripts": {
     "test": "phpunit --testsuite unit,integration",
     "test:unit": "phpunit --testsuite unit",
-    "test:integration": "phpunit --testsuite integration"
+    "test:integration": "phpunit --testsuite integration",
+    "sgc": "@php bin/sgc.php"
   },
   "require": {
     "vlucas/phpdotenv": "^5.6",

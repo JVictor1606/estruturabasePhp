@@ -39,3 +39,9 @@ Limiting/appLimiting.txt
 # Cache do PHPUnit
 /.phpunit.cache/
 /.phpunit.result.cache
+
+# SQL gerado para o MariaDB (php bin/sgc.php mariadb:gerar): e derivado, nao versionar
+/src/database/mariadb/
+
+# Registro local das migrations aplicadas (migration:marcar): e do ambiente de cada maquina, nao versionar
+/src/database/.migrations-aplicadas.json
